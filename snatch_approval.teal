@@ -1,0 +1,435 @@
+#pragma version 2
+txn ApplicationID
+int 0
+==
+bnz l0
+txn OnCompletion
+int DeleteApplication
+==
+bnz l1
+txn OnCompletion
+int UpdateApplication
+==
+bnz l2
+txn OnCompletion
+int CloseOut
+==
+bnz l3
+txn OnCompletion
+int OptIn
+==
+bnz l4
+byte "bid"
+txna ApplicationArgs 0
+==
+bnz l5
+byte "drain"
+txna ApplicationArgs 0
+==
+bnz l6
+err
+l0:
+txn NumAppArgs
+int 15
+==
+bnz l8
+err
+l8:
+byte "Game"
+txna ApplicationArgs 0
+app_global_put
+byte "Creator"
+txn Sender
+app_global_put
+byte "Escrow"
+txna ApplicationArgs 1
+app_global_put
+byte "Winner"
+txn Sender
+app_global_put
+byte "BidCount"
+int 0
+app_global_put
+byte "RoundStart"
+txna ApplicationArgs 2
+btoi
+app_global_put
+byte "RoundEnd"
+txna ApplicationArgs 11
+btoi
+app_global_put
+byte "Price"
+txna ApplicationArgs 3
+btoi
+app_global_put
+byte "Multiplier"
+txna ApplicationArgs 4
+btoi
+app_global_put
+byte "Timer"
+txna ApplicationArgs 5
+btoi
+app_global_put
+byte "TimerFirst"
+txna ApplicationArgs 6
+btoi
+app_global_put
+byte "TimerSecond"
+txna ApplicationArgs 7
+btoi
+app_global_put
+byte "FeesFirst"
+txna ApplicationArgs 8
+btoi
+app_global_put
+byte "FeesSecond"
+txna ApplicationArgs 9
+btoi
+app_global_put
+byte "Dividend"
+txna ApplicationArgs 10
+btoi
+app_global_put
+byte "SeedAmount"
+txna ApplicationArgs 12
+btoi
+app_global_put
+byte "PlusMinusFirst"
+txna ApplicationArgs 13
+btoi
+app_global_put
+byte "PlusMinusSecond"
+txna ApplicationArgs 14
+btoi
+app_global_put
+byte "Pot"
+int 0
+app_global_put
+int 1
+return
+b l7
+l1:
+txn Sender
+byte "Creator"
+app_global_get
+==
+bnz l9
+err
+l9:
+byte "Pot"
+app_global_get
+int 0
+==
+bnz l10
+err
+l10:
+int 1
+return
+b l7
+l2:
+txn Sender
+byte "Creator"
+app_global_get
+==
+bnz l11
+err
+l11:
+txn NumAppArgs
+int 1
+==
+bnz l12
+err
+l12:
+byte "Escrow"
+txna ApplicationArgs 0
+app_global_put
+int 1
+return
+b l7
+l3:
+int 1
+return
+b l7
+l4:
+int 0
+byte "Bids"
+int 0
+app_local_put
+int 0
+byte "BidCount"
+int 0
+app_local_put
+int 1
+return
+b l7
+l5:
+global GroupSize
+int 2
+==
+gtxn 1 Sender
+byte "Creator"
+app_global_get
+!=
+gtxn 1 Amount
+byte "Price"
+app_global_get
+==
+&&
+gtxn 1 Sender
+byte "Creator"
+app_global_get
+!=
+gtxn 1 Amount
+byte "Price"
+app_global_get
+byte "Price"
+app_global_get
+byte "FeesFirst"
+app_global_get
+*
+int 100
+/
++
+==
+&&
+||
+gtxn 1 Sender
+byte "Creator"
+app_global_get
+!=
+gtxn 1 Amount
+byte "Price"
+app_global_get
+byte "Price"
+app_global_get
+byte "FeesSecond"
+app_global_get
+*
+int 100
+/
++
+==
+&&
+||
+gtxn 1 Sender
+byte "Creator"
+app_global_get
+==
+byte "Pot"
+app_global_get
+int 0
+==
+&&
+||
+&&
+gtxn 0 Sender
+byte "Creator"
+app_global_get
+==
+&&
+gtxn 1 Receiver
+byte "Escrow"
+app_global_get
+==
+&&
+gtxn 1 TypeEnum
+int pay
+==
+&&
+bnz l13
+err
+l13:
+byte "Pot"
+byte "Pot"
+app_global_get
+gtxn 1 Amount
++
+app_global_put
+byte "Winner"
+gtxn 1 Sender
+app_global_put
+int 1
+byte "Bids"
+int 1
+byte "Bids"
+app_local_get
+gtxn 1 Amount
++
+app_local_put
+gtxn 1 Sender
+byte "Creator"
+app_global_get
+!=
+gtxn 1 Amount
+byte "Price"
+app_global_get
+==
+&&
+bz l14
+byte "BidCount"
+byte "BidCount"
+app_global_get
+int 1
++
+app_global_put
+byte "Price"
+gtxn 1 Amount
+gtxn 1 Amount
+byte "Multiplier"
+app_global_get
+*
+int 10000
+/
++
+app_global_put
+byte "RoundEnd"
+byte "RoundEnd"
+app_global_get
+byte "Timer"
+app_global_get
++
+app_global_put
+l14:
+gtxn 1 Sender
+byte "Creator"
+app_global_get
+!=
+gtxn 1 Amount
+byte "Price"
+app_global_get
+byte "Price"
+app_global_get
+byte "FeesFirst"
+app_global_get
+*
+int 100
+/
++
+==
+&&
+bz l15
+byte "BidCount"
+byte "BidCount"
+app_global_get
+int 1
++
+app_global_put
+byte "Price"
+gtxn 1 Amount
+gtxn 1 Amount
+byte "Multiplier"
+app_global_get
+*
+int 10000
+/
++
+app_global_put
+byte "RoundEnd"
+byte "RoundEnd"
+app_global_get
+byte "TimerFirst"
+app_global_get
+byte "PlusMinusFirst"
+app_global_get
+*
++
+byte "TimerFirst"
+app_global_get
+-
+app_global_put
+l15:
+gtxn 1 Sender
+byte "Creator"
+app_global_get
+!=
+gtxn 1 Amount
+byte "Price"
+app_global_get
+byte "Price"
+app_global_get
+byte "FeesSecond"
+app_global_get
+*
+int 100
+/
++
+==
+&&
+bz l16
+byte "BidCount"
+byte "BidCount"
+app_global_get
+int 1
++
+app_global_put
+byte "Price"
+gtxn 1 Amount
+gtxn 1 Amount
+byte "Multiplier"
+app_global_get
+*
+int 10000
+/
++
+app_global_put
+byte "RoundEnd"
+byte "RoundEnd"
+app_global_get
+byte "TimerSecond"
+app_global_get
+byte "PlusMinusSecond"
+app_global_get
+*
++
+byte "TimerSecond"
+app_global_get
+-
+app_global_put
+l16:
+int 1
+return
+b l7
+l6:
+global GroupSize
+int 2
+==
+bnz l17
+err
+l17:
+gtxn 0 Sender
+byte "Creator"
+app_global_get
+==
+bnz l18
+err
+l18:
+gtxn 1 Sender
+byte "Escrow"
+app_global_get
+==
+bnz l19
+err
+l19:
+gtxn 1 Amount
+int 0
+==
+bnz l20
+err
+l20:
+gtxn 1 Receiver
+byte "Game"
+app_global_get
+==
+bnz l21
+err
+l21:
+gtxn 1 CloseRemainderTo
+byte "Game"
+app_global_get
+==
+bnz l22
+err
+l22:
+int 1
+return
+l7:
